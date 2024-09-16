@@ -10,10 +10,10 @@ import (
 	"strings"
 )
 
-func getDefault(path string) string {
+func getDefault(path, alias string) string {
 	return fmt.Sprintf(`{
 	"path": "%s",
-	"sessionName": "my_project",
+	"sessionName": "%s",
 	"defaultWindow": "code",
 	"windows": [
 		{
@@ -131,7 +131,7 @@ func create(phoemuxConfigPath, pwd string) {
 		return
 	}
 
-	example := getDefault(pwd)
+	example := getDefault(pwd, alias)
 
 	_, err = config.Write([]byte(example))
 	if err != nil {
