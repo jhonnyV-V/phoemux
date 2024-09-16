@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/exec"
 )
 
 type Terminal struct {
@@ -111,7 +112,13 @@ func create(phoemuxConfigPath, pwd string) {
 		return
 	}
 
-	_, err := os.Stat(phoemuxConfigPath + "/" + alias + ".json")
+	filePath := fmt.Sprintf(
+		"%s/%s.json",
+		phoemuxConfigPath,
+		alias,
+	)
+
+	_, err := os.Stat(filePath)
 	if err != nil {
 		if os.IsNotExist(err) {
 			//ignore case
@@ -128,7 +135,7 @@ func create(phoemuxConfigPath, pwd string) {
 		return
 	}
 
-	config, err := os.Create(phoemuxConfigPath + "/" + alias + ".json")
+	config, err := os.Create(filePath)
 	if err != nil {
 		fmt.Printf("Failed to create ash: %s\n", err)
 		return
@@ -146,6 +153,20 @@ func create(phoemuxConfigPath, pwd string) {
 		fmt.Printf("Failed write ash: %s\n", err)
 		return
 	}
+	config.Close()
 
 	//TODO: open in $EDITOR
+	cmd := exec.Command("sh", "-c", "$EDITOR "+filePath)
+	cmd.Env = nil
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Stdin = os.Stdin
+	err = cmd.Start()
+	if err != nil {
+		fmt.Printf("failed to open editor: %s\n", err)
+	}
+	err = cmd.Wait()
+	if err != nil {
+		fmt.Printf("Error while editing the file: %s\n", err)
+	}
 }
