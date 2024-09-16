@@ -4,44 +4,30 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"jhonnyV-V/phoemux/tmux"
 	"os"
 	"os/exec"
+	"strings"
 )
 
-type Terminal struct {
-	Command string `json:"command"`
-}
-
-type Window struct {
-	//values: horizontal or vertical
-	Split     string     `json:"split,omitempty"`
-	Name      string     `json:"name"`
-	Terminals []Terminal `json:"terminals"`
-}
-
-type Ash struct {
-	Path          string   `json:"path"`
-	SessionName   string   `json:"sessionName"`
-	DefaultWindow string   `json:"defaultWindow"`
-	Windows       []Window `json:"windows"`
-}
-
-func getDefault(path string) Ash {
-	return Ash{
-		Path:          path,
-		SessionName:   "my_project",
-		DefaultWindow: "code",
-		Windows: []Window{
-			{
-				Name: "code",
-				Terminals: []Terminal{
-					{
-						Command: "echo \"do something here \"",
-					},
-				},
-			},
-		},
-	}
+func getDefault(path string) string {
+	return fmt.Sprintf(`{
+	"path": "%s",
+	"sessionName": "my_project",
+	"defaultWindow": "code",
+	"windows": [
+		{
+			"name": "code",
+			"terminals": [
+				{
+					"command": "echo \"do something here \""
+				}
+			]
+		}
+	]
+}`,
+		path,
+	)
 }
 
 func main() {
@@ -49,7 +35,6 @@ func main() {
 	if err != nil {
 		fmt.Printf("failed to get pwd: %s\n", err)
 	}
-	fmt.Printf("PWD: %s\n", dir)
 
 	userConfigPath, err := os.UserConfigDir()
 	if err != nil {
@@ -76,7 +61,7 @@ func main() {
 	flag.Parse()
 
 	command := flag.Arg(0)
-	fmt.Printf("args %#v \n", flag.Args())
+	//fmt.Printf("args %#v \n", flag.Args())
 
 	switch command {
 	case "create":
@@ -86,24 +71,29 @@ func main() {
 		)
 
 	case "edit":
-		fmt.Printf("edit command\n")
+		edit(phoemuxConfigPath)
 
 	case "list":
-		fmt.Printf("list command\n")
+		list(phoemuxConfigPath)
 
 	case "delete":
-		fmt.Printf("delete command\n")
+		fmt.Printf("delete command not implemented yet\n")
 
 	case "":
 		fmt.Printf("empty command\n")
 
 	default:
 		fmt.Printf("unkown command maybe rise from the ashes\n")
+		exist := ashExist(phoemuxConfigPath, command)
+		fmt.Printf("ash exist\n")
+		if exist {
+			fmt.Printf("creating session\n")
+			recreateFromAshes(phoemuxConfigPath)
+		}
 	}
 }
 
 func create(phoemuxConfigPath, pwd string) {
-	fmt.Printf("create command\n")
 	alias := flag.Arg(1)
 	exist := true
 
@@ -143,19 +133,53 @@ func create(phoemuxConfigPath, pwd string) {
 
 	example := getDefault(pwd)
 
-	data, err := json.Marshal(example)
-	if err != nil {
-		fmt.Printf("Failed to marshall ash: %s\n", err)
-		return
-	}
-	_, err = config.Write(data)
+	_, err = config.Write([]byte(example))
 	if err != nil {
 		fmt.Printf("Failed write ash: %s\n", err)
 		return
 	}
 	config.Close()
 
-	//TODO: open in $EDITOR
+	cmd := exec.Command("sh", "-c", "$EDITOR "+filePath)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Stdin = os.Stdin
+	err = cmd.Start()
+	if err != nil {
+		fmt.Printf("failed to open editor: %s\n", err)
+	}
+	err = cmd.Wait()
+	if err != nil {
+		fmt.Printf("Error while editing the file: %s\n", err)
+	}
+}
+
+func edit(phoemuxConfigPath string) {
+	alias := flag.Arg(1)
+
+	if alias == "" {
+		fmt.Printf("create command expects an alias\n")
+		return
+	}
+
+	filePath := fmt.Sprintf(
+		"%s/%s.json",
+		phoemuxConfigPath,
+		alias,
+	)
+
+	_, err := os.Stat(filePath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			//ignore case
+			fmt.Printf("ash for %s does not exist\n", alias)
+			return
+		} else {
+			fmt.Printf("failed to get ash for %s: %s\n", alias, err)
+			return
+		}
+	}
+
 	cmd := exec.Command("sh", "-c", "$EDITOR "+filePath)
 	cmd.Env = nil
 	cmd.Stdout = os.Stdout
@@ -169,4 +193,74 @@ func create(phoemuxConfigPath, pwd string) {
 	if err != nil {
 		fmt.Printf("Error while editing the file: %s\n", err)
 	}
+}
+
+func list(phoemuxConfigPath string) {
+	ashes, err := os.ReadDir(phoemuxConfigPath)
+	if err != nil {
+		fmt.Printf("Failed to read directory: %s\n", err)
+	}
+
+	for _, ash := range ashes {
+		name, _, _ := strings.Cut(ash.Name(), ".json")
+		//TODO: display path inside file
+		fmt.Printf("%s\n", name)
+	}
+}
+
+func recreateFromAshes(phoemuxConfigPath string) {
+	alias := flag.Arg(0)
+	var ash tmux.Ash
+
+	filePath := fmt.Sprintf(
+		"%s/%s.json",
+		phoemuxConfigPath,
+		alias,
+	)
+
+	file, err := os.ReadFile(filePath)
+	if err != nil {
+		fmt.Printf("Failed to read ash: %s\n", err)
+		return
+	}
+
+	err = json.Unmarshal(file, &ash)
+	if err != nil {
+		fmt.Printf("Failed to unmarshall ash: %s\n", err)
+		return
+	}
+
+	fmt.Printf("ash %#v\n", ash)
+	tmux.NewSession(ash)
+	for i, window := range ash.Windows {
+		if i == 0 {
+			tmux.RenameWindow(ash, "0", window.Name)
+		} else {
+			tmux.NewWindow(ash, window)
+		}
+
+		tmux.RunCommand(
+			ash.SessionName,
+			window.Name,
+			window.Terminals[0].Command,
+		)
+	}
+
+	tmux.SetWindows(ash)
+	tmux.Attach(ash)
+}
+
+func ashExist(phoemuxConfigPath, alias string) bool {
+	ashes, err := os.ReadDir(phoemuxConfigPath)
+	if err != nil {
+		fmt.Printf("Failed to read directory: %s\n", err)
+	}
+
+	for _, ash := range ashes {
+		name, _, _ := strings.Cut(ash.Name(), ".json")
+		if alias == name {
+			return true
+		}
+	}
+	return false
 }
