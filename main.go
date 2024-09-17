@@ -27,6 +27,7 @@ func getDefault(path, alias string) string {
 	]
 }`,
 		path,
+		alias,
 	)
 }
 
