@@ -64,10 +64,11 @@ func NewWindow(ash Ash, window Window) {
 	cmd := exec.Command(
 		"tmux",
 		"new-window",
-		"-t "+ash.SessionName,
-		"-c "+ash.Path,
+		"-c",
+		ash.Path,
 		"-n",
 		window.Name,
+		"-t "+ash.SessionName,
 	)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
