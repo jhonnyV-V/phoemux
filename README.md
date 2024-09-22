@@ -8,8 +8,26 @@ made with [vhs](https://github.com/charmbracelet/vhs/)
 ## Why?
 I just find anoying manually setting up local servers every day
 
-## Available Commands
+## How to install?
 
+### With Go
+```bash
+go install github.com/jhonnyV-V/phoemux@latest
+```
+
+### Compile it yourself
+
+```bash
+git clone git@github.com:jhonnyV-V/phoemux && cd phoemux
+```
+```bash
+go build -o phoemux
+```
+```bash
+sudo mv ./phoemux /usr/local/bin
+```
+
+## Available Commands
 
 ### create
 ```bash
