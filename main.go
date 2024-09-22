@@ -78,7 +78,7 @@ func main() {
 		list(phoemuxConfigPath)
 
 	case "delete":
-		fmt.Printf("delete command not implemented yet\n")
+		delete(phoemuxConfigPath)
 
 	case "":
 		fmt.Printf("empty command\n")
@@ -264,4 +264,22 @@ func ashExist(phoemuxConfigPath, alias string) bool {
 		}
 	}
 	return false
+}
+
+func delete(phoemuxConfigPath string) {
+	alias := flag.Arg(1)
+
+	if alias == "" {
+		fmt.Printf("delete command expects an alias\n")
+		return
+	}
+	exist := ashExist(phoemuxConfigPath, alias)
+	if !exist {
+		fmt.Printf("ash does not exist\n")
+		return
+	}
+
+	os.Remove(
+		phoemuxConfigPath + "/" + alias + ".json",
+	)
 }
