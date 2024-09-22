@@ -16,7 +16,7 @@ I just find anoying manually setting up local servers every day
 phoemux create <alias>
 ```
 create a config file that I like to call ash with the default values pointing to the current path
-and open the "ash" with the $EDITOR env variable or vi as a default
+and open the "ash" with the $EDITOR env variable or nano as a default
 
 ### delete
 ```bash
@@ -28,7 +28,7 @@ delete a config file (ash)
 ```bash
 phoemux edit <alias>
 ```
-open the "ash" with the $EDITOR env variable or vi as a default
+open the "ash" with the $EDITOR env variable or nano as a default
 
 ### list
 ```bash

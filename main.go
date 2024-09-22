@@ -141,7 +141,8 @@ func create(phoemuxConfigPath, pwd string) {
 	}
 	config.Close()
 
-	cmd := exec.Command("sh", "-c", "$EDITOR "+filePath)
+	editor := getEditor()
+	cmd := exec.Command("sh", "-c", editor+" "+filePath)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
@@ -181,7 +182,8 @@ func edit(phoemuxConfigPath string) {
 		}
 	}
 
-	cmd := exec.Command("sh", "-c", "$EDITOR "+filePath)
+	editor := getEditor()
+	cmd := exec.Command("sh", "-c", editor+" "+filePath)
 	cmd.Env = nil
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -251,21 +253,6 @@ func recreateFromAshes(phoemuxConfigPath string) {
 	tmux.Attach(ash)
 }
 
-func ashExist(phoemuxConfigPath, alias string) bool {
-	ashes, err := os.ReadDir(phoemuxConfigPath)
-	if err != nil {
-		fmt.Printf("Failed to read directory: %s\n", err)
-	}
-
-	for _, ash := range ashes {
-		name, _, _ := strings.Cut(ash.Name(), ".json")
-		if alias == name {
-			return true
-		}
-	}
-	return false
-}
-
 func delete(phoemuxConfigPath string) {
 	alias := flag.Arg(1)
 
@@ -282,4 +269,28 @@ func delete(phoemuxConfigPath string) {
 	os.Remove(
 		phoemuxConfigPath + "/" + alias + ".json",
 	)
+}
+
+func ashExist(phoemuxConfigPath, alias string) bool {
+	ashes, err := os.ReadDir(phoemuxConfigPath)
+	if err != nil {
+		fmt.Printf("Failed to read directory: %s\n", err)
+	}
+
+	for _, ash := range ashes {
+		name, _, _ := strings.Cut(ash.Name(), ".json")
+		if alias == name {
+			return true
+		}
+	}
+	return false
+}
+
+func getEditor() string {
+	editor := os.Getenv("EDITOR")
+	if editor == "" {
+		return "nano"
+	}
+
+	return editor
 }
