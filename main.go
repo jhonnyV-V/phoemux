@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"jhonnyV-V/phoemux/tmux"
+	"github.com/jhonnyV-V/phoemux/tmux"
 	"os"
 	"os/exec"
 	"strings"
