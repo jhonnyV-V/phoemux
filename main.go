@@ -8,6 +8,13 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+
+	"github.com/charmbracelet/bubbles/list"
+	tea "github.com/charmbracelet/bubbletea"
+)
+
+var (
+	Quit bool
 )
 
 func getDefault(path, alias string) string {
@@ -75,7 +82,7 @@ func main() {
 		edit(phoemuxConfigPath)
 
 	case "list":
-		list(phoemuxConfigPath)
+		listAshes(phoemuxConfigPath)
 
 	case "delete":
 		delete(phoemuxConfigPath)
@@ -89,7 +96,7 @@ func main() {
 		fmt.Printf("ash exist\n")
 		if exist {
 			fmt.Printf("creating session\n")
-			recreateFromAshes(phoemuxConfigPath)
+			recreateFromAshes(phoemuxConfigPath, command)
 		}
 	}
 }
@@ -198,21 +205,45 @@ func edit(phoemuxConfigPath string) {
 	}
 }
 
-func list(phoemuxConfigPath string) {
+func listAshes(phoemuxConfigPath string) {
 	ashes, err := os.ReadDir(phoemuxConfigPath)
 	if err != nil {
 		fmt.Printf("Failed to read directory: %s\n", err)
 	}
 
+	items := []list.Item{}
+
 	for _, ash := range ashes {
 		name, _, _ := strings.Cut(ash.Name(), ".json")
 		//TODO: display path inside file
-		fmt.Printf("%s\n", name)
+		items = append(items, item(name))
 	}
+
+	const defaultWidth = 20
+
+	l := list.New(items, itemDelegate{}, defaultWidth, listHeight)
+	l.Title = "Ashes"
+	l.SetShowStatusBar(false)
+	l.SetFilteringEnabled(false)
+	l.Styles.Title = titleStyle
+	l.Styles.PaginationStyle = paginationStyle
+	l.Styles.HelpStyle = helpStyle
+
+	m := model{list: l}
+
+	if _, err := tea.NewProgram(m).Run(); err != nil {
+		fmt.Println("Error running program:", err)
+		os.Exit(1)
+	}
+
+	if Quit {
+		os.Exit(0)
+	}
+
+	recreateFromAshes(phoemuxConfigPath, Choice)
 }
 
-func recreateFromAshes(phoemuxConfigPath string) {
-	alias := flag.Arg(0)
+func recreateFromAshes(phoemuxConfigPath, alias string) {
 	var ash tmux.Ash
 
 	filePath := fmt.Sprintf(

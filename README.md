@@ -21,6 +21,9 @@ go install github.com/jhonnyV-V/phoemux@latest
 git clone git@github.com:jhonnyV-V/phoemux && cd phoemux
 ```
 ```bash
+go mod tidy
+```
+```bash
 go build -o phoemux
 ```
 ```bash
@@ -52,7 +55,7 @@ open the "ash" with the $EDITOR env variable or nano as a default
 ```bash
 phoemux list
 ```
-just list all the configs files (or ashes) created
+list all the configs files (or ashes) created and if you select one it execute it
 
 ### execute
 ```bash
