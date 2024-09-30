@@ -56,6 +56,7 @@ open the "ash" with the $EDITOR env variable or nano as a default
 phoemux list
 ```
 list all the configs files (or ashes) created and if you select one it execute it
+![usage](./list_demo.gif)
 
 ### execute
 ```bash
