@@ -16,6 +16,7 @@ import (
 var (
 	Quit bool
 )
+//TODO: add last or restore command to reopen the last ash
 
 func getDefault(path, alias string) string {
 	return fmt.Sprintf(`{
