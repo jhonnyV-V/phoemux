@@ -14,7 +14,7 @@ Enter
 Sleep 100ms
 Show
 
-Type "phoemux Phoemux"
+Type "phoemux phoemux"
 Sleep 400ms
 Enter
 

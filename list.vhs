@@ -21,9 +21,6 @@ Sleep 800ms
 
 Type "j"
 Sleep 300ms
-
-Type "j"
-Sleep 300ms
 Enter
 
 Sleep 2000ms
