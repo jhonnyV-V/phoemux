@@ -84,6 +84,9 @@ func main() {
 	case "delete":
 		delete(phoemuxConfigPath)
 
+	case "last":
+		openFromCache(phoemuxConfigPath)
+
 	case "":
 		fmt.Printf("empty command\n")
 
@@ -243,6 +246,41 @@ func listAshes(phoemuxConfigPath string) {
 	recreateFromAshes(phoemuxConfigPath, Choice)
 }
 
+func writeToCache(phoemuxConfigPath, alias string) {
+	cachePath := fmt.Sprintf(
+		"%s/cache",
+		phoemuxConfigPath,
+	)
+
+	err := os.WriteFile(cachePath, []byte(alias), 0766)
+	if err != nil {
+		fmt.Printf("Failed to write to cache: %s\n", err)
+		return
+	}
+}
+
+func openFromCache(phoemuxConfigPath string) {
+	cachePath := fmt.Sprintf(
+		"%s/cache",
+		phoemuxConfigPath,
+	)
+
+	_, err := os.Stat(cachePath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			fmt.Printf("failed to read from cache: %s\n", err)
+			os.Exit(5)
+		} else {
+			fmt.Printf("failed to get cache file: %s\n", err)
+			os.Exit(6)
+		}
+	}
+
+	file, err := os.ReadFile(cachePath)
+
+	recreateFromAshes(phoemuxConfigPath, string(file))
+}
+
 func recreateFromAshes(phoemuxConfigPath, alias string) {
 	var ash tmux.Ash
 
@@ -263,6 +301,8 @@ func recreateFromAshes(phoemuxConfigPath, alias string) {
 		fmt.Printf("Failed to unmarshall ash: %s\n", err)
 		return
 	}
+
+	writeToCache(phoemuxConfigPath, alias)
 
 	fmt.Printf("ash %#v\n", ash)
 	tmux.NewSession(ash)
