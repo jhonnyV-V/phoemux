@@ -7,21 +7,21 @@ import (
 )
 
 type Terminal struct {
-	Command string `json:"command"`
+	Command string `yaml:"command"`
 }
 
 type Window struct {
 	//values: horizontal or vertical
-	Split     string     `json:"split,omitempty"`
-	Name      string     `json:"name"`
-	Terminals []Terminal `json:"terminals"`
+	Split     string     `yaml:"split,omitempty"`
+	Name      string     `yaml:"name"`
+	Terminals []Terminal `yaml:"terminals"`
 }
 
 type Ash struct {
-	Path          string   `json:"path"`
-	SessionName   string   `json:"sessionName"`
-	DefaultWindow string   `json:"defaultWindow"`
-	Windows       []Window `json:"windows"`
+	Path          string   `yaml:"path"`
+	SessionName   string   `yaml:"sessionName"`
+	DefaultWindow string   `yaml:"defaultWindow"`
+	Windows       []Window `yaml:"windows"`
 }
 
 func NewSession(ash Ash) {

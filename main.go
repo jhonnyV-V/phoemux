@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	"github.com/jhonnyV-V/phoemux/tmux"
@@ -11,29 +10,26 @@ import (
 
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/goccy/go-yaml"
 )
 
 var (
 	Quit bool
 )
+
 //TODO: add last or restore command to reopen the last ash
 
 func getDefault(path, alias string) string {
-	return fmt.Sprintf(`{
-	"path": "%s",
-	"sessionName": "%s",
-	"defaultWindow": "code",
-	"windows": [
-		{
-			"name": "code",
-			"terminals": [
-				{
-					"command": "echo \"do something here \""
-				}
-			]
-		}
-	]
-}`,
+	return fmt.Sprintf(`path: "%s"
+sessionName: "%s"
+defaultWindow: code
+windows:
+- name: code
+  terminals:
+  - command: echo "do something here"
+- name: servers
+  terminals:
+  - command: ls`,
 		path,
 		alias,
 	)
@@ -112,7 +108,7 @@ func create(phoemuxConfigPath, pwd string) {
 	}
 
 	filePath := fmt.Sprintf(
-		"%s/%s.json",
+		"%s/%s.yaml",
 		phoemuxConfigPath,
 		alias,
 	)
@@ -173,7 +169,7 @@ func edit(phoemuxConfigPath string) {
 	}
 
 	filePath := fmt.Sprintf(
-		"%s/%s.json",
+		"%s/%s.yaml",
 		phoemuxConfigPath,
 		alias,
 	)
@@ -215,7 +211,10 @@ func listAshes(phoemuxConfigPath string) {
 	items := []list.Item{}
 
 	for _, ash := range ashes {
-		name, _, _ := strings.Cut(ash.Name(), ".json")
+		if !strings.Contains(ash.Name(), ".yaml") {
+			continue
+		}
+		name, _, _ := strings.Cut(ash.Name(), ".yaml")
 		//TODO: display path inside file
 		items = append(items, item(name))
 	}
@@ -248,7 +247,7 @@ func recreateFromAshes(phoemuxConfigPath, alias string) {
 	var ash tmux.Ash
 
 	filePath := fmt.Sprintf(
-		"%s/%s.json",
+		"%s/%s.yaml",
 		phoemuxConfigPath,
 		alias,
 	)
@@ -259,7 +258,7 @@ func recreateFromAshes(phoemuxConfigPath, alias string) {
 		return
 	}
 
-	err = json.Unmarshal(file, &ash)
+	err = yaml.Unmarshal(file, &ash)
 	if err != nil {
 		fmt.Printf("Failed to unmarshall ash: %s\n", err)
 		return
@@ -299,7 +298,7 @@ func delete(phoemuxConfigPath string) {
 	}
 
 	os.Remove(
-		phoemuxConfigPath + "/" + alias + ".json",
+		phoemuxConfigPath + "/" + alias + ".yaml",
 	)
 }
 
@@ -310,7 +309,10 @@ func ashExist(phoemuxConfigPath, alias string) bool {
 	}
 
 	for _, ash := range ashes {
-		name, _, _ := strings.Cut(ash.Name(), ".json")
+		if !strings.Contains(ash.Name(), ".yaml") {
+			continue
+		}
+		name, _, _ := strings.Cut(ash.Name(), ".yaml")
 		if alias == name {
 			return true
 		}
