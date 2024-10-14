@@ -44,7 +44,6 @@ func NewSession(ash Ash) {
 
 func RenameWindow(ash Ash, oldName, newName string) {
 	target := fmt.Sprintf("%s:%s", ash.SessionName, oldName)
-	fmt.Printf("rename target %s\n", target)
 	cmd := exec.Command(
 		"tmux",
 		"rename-window",

@@ -304,7 +304,6 @@ func recreateFromAshes(phoemuxConfigPath, alias string) {
 
 	writeToCache(phoemuxConfigPath, alias)
 
-	fmt.Printf("ash %#v\n", ash)
 	tmux.NewSession(ash)
 	for i, window := range ash.Windows {
 		if i == 0 {
