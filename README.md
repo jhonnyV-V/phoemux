@@ -58,6 +58,13 @@ phoemux list
 list all the configs files (or ashes) created and if you select one it execute it
 ![usage](./list_demo.gif)
 
+### last
+```bash
+phoemux last
+```
+if possible open the last as used
+![example](./last_demo.gif)
+
 ### execute
 ```bash
 phoemux <alias>
