@@ -5,6 +5,7 @@ import (
 	"io"
 	"strings"
 
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -20,8 +21,36 @@ var (
 	helpStyle         = list.DefaultStyles().HelpStyle.PaddingLeft(4).PaddingBottom(1)
 	quitTextStyle     = lipgloss.NewStyle().Margin(1, 0, 2, 4)
 
-	Choice = ""
+	Choice ChoiceType = ChoiceType{}
 )
+
+type ChoiceType struct {
+	Target string
+	Type   string
+}
+
+type listKeyMap struct {
+	editSelection   key.Binding
+	deleteSelection key.Binding
+	openSelection   key.Binding
+}
+
+func newListKeyMap() *listKeyMap {
+	return &listKeyMap{
+		editSelection: key.NewBinding(
+			key.WithKeys("e"),
+			key.WithHelp("e", "edit ash"),
+		),
+		deleteSelection: key.NewBinding(
+			key.WithKeys("d"),
+			key.WithHelp("d", "delete ash"),
+		),
+		openSelection: key.NewBinding(
+			key.WithKeys("enter"),
+			key.WithHelp("enter", "open ash"),
+		),
+	}
+}
 
 type item string
 
@@ -77,9 +106,29 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			i, ok := m.list.SelectedItem().(item)
 			if ok {
 				m.choice = strings.TrimSpace(string(i))
-				Choice = m.choice
+				Choice.Target = m.choice
+				Choice.Type = "open"
 			}
 			return m, tea.Quit
+
+		case "e":
+			i, ok := m.list.SelectedItem().(item)
+			if ok {
+				m.choice = strings.TrimSpace(string(i))
+				Choice.Target = m.choice
+				Choice.Type = "edit"
+			}
+			return m, tea.Quit
+
+		case "d":
+			i, ok := m.list.SelectedItem().(item)
+			if ok {
+				m.choice = strings.TrimSpace(string(i))
+				Choice.Target = m.choice
+				Choice.Type = "delete"
+			}
+			return m, tea.Quit
+
 		}
 	}
 

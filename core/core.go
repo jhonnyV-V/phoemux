@@ -2,11 +2,13 @@ package core
 
 import (
 	"fmt"
-	"github.com/jhonnyV-V/phoemux/tmux"
 	"os"
 	"os/exec"
 	"strings"
 
+	"github.com/jhonnyV-V/phoemux/tmux"
+
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/goccy/go-yaml"
@@ -177,6 +179,7 @@ func ListAshes(phoemuxConfigPath string) {
 	}
 
 	const defaultWidth = 20
+	listKeys := newListKeyMap()
 
 	l := list.New(items, itemDelegate{}, defaultWidth, listHeight)
 	l.Title = "Ashes"
@@ -185,6 +188,13 @@ func ListAshes(phoemuxConfigPath string) {
 	l.Styles.Title = titleStyle
 	l.Styles.PaginationStyle = paginationStyle
 	l.Styles.HelpStyle = helpStyle
+	l.AdditionalFullHelpKeys = func() []key.Binding {
+		return []key.Binding{
+			listKeys.openSelection,
+			listKeys.editSelection,
+			listKeys.deleteSelection,
+		}
+	}
 
 	m := model{list: l}
 
@@ -197,7 +207,14 @@ func ListAshes(phoemuxConfigPath string) {
 		os.Exit(0)
 	}
 
-	recreateFromAshes(phoemuxConfigPath, Choice)
+	switch Choice.Type {
+	case "open":
+		recreateFromAshes(phoemuxConfigPath, Choice.Target)
+	case "delete":
+		Delete(phoemuxConfigPath, Choice.Target)
+	case "edit":
+		Edit(phoemuxConfigPath, Choice.Target)
+	}
 }
 
 func writeToCache(phoemuxConfigPath, alias string) {
