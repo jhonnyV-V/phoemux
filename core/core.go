@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"io/fs"
 	"os"
 	"os/exec"
 	"strings"
@@ -16,6 +17,10 @@ import (
 
 var (
 	Quit bool
+)
+
+var (
+	OpenEditor = true
 )
 
 func fileExist(path string) bool {
@@ -113,6 +118,10 @@ func Create(phoemuxConfigPath, pwd, alias string) {
 	}
 	config.Close()
 
+	if !OpenEditor {
+		return
+	}
+
 	editor := getEditor()
 	cmd := exec.Command("sh", "-c", editor+" "+filePath)
 	cmd.Stdout = os.Stdout
@@ -161,14 +170,8 @@ func Edit(phoemuxConfigPath, alias string) {
 	}
 }
 
-func ListAshes(phoemuxConfigPath string) {
-	ashes, err := os.ReadDir(phoemuxConfigPath)
-	if err != nil {
-		fmt.Printf("Failed to read directory: %s\n", err)
-	}
-
+func getListOfItems(ashes []fs.DirEntry) []list.Item {
 	items := []list.Item{}
-
 	for _, ash := range ashes {
 		if !strings.Contains(ash.Name(), ".yaml") {
 			continue
@@ -177,6 +180,16 @@ func ListAshes(phoemuxConfigPath string) {
 		//TODO: display path inside file
 		items = append(items, item(name))
 	}
+	return items
+}
+
+func ListAshes(phoemuxConfigPath string) {
+	ashes, err := os.ReadDir(phoemuxConfigPath)
+	if err != nil {
+		fmt.Printf("Failed to read directory: %s\n", err)
+	}
+
+	var items []list.Item = getListOfItems(ashes)
 
 	const defaultWidth = 20
 	listKeys := newListKeyMap()
