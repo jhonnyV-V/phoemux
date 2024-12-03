@@ -344,6 +344,8 @@ func Open(phoemuxConfigPath, alias string) {
 	if exist {
 		fmt.Printf("creating session\n")
 		recreateFromAshes(phoemuxConfigPath, alias)
+	} else {
+		fmt.Printf("ash not found, can not create session\n")
 	}
 }
 
