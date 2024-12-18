@@ -70,3 +70,7 @@ if possible open the last as used
 phoemux <alias>
 ```
 set up tmux session following the config file or ash related to that alias
+
+## Changelog
+
+- now if a session for an "ash" already exist phoemux will attach or switch to that session

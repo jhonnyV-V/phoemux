@@ -29,10 +29,11 @@ func NewSession(ash Ash) {
 		"tmux",
 		"new-session",
 		"-d",
-		"-s "+ash.SessionName,
+		fmt.Sprintf("-s %s", ash.SessionName),
 		"-c",
 		ash.Path,
 	)
+	fmt.Println(cmd.Args)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
@@ -47,7 +48,7 @@ func RenameWindow(ash Ash, oldName, newName string) {
 	cmd := exec.Command(
 		"tmux",
 		"rename-window",
-		"-t "+target,
+		fmt.Sprintf("-t %s", target),
 		newName,
 	)
 	cmd.Stdout = os.Stdout
@@ -67,7 +68,7 @@ func NewWindow(ash Ash, window Window) {
 		ash.Path,
 		"-n",
 		window.Name,
-		"-t "+ash.SessionName,
+		fmt.Sprintf("-t %s", ash.SessionName),
 	)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -80,7 +81,13 @@ func NewWindow(ash Ash, window Window) {
 
 func RunCommand(sessionName, currentWindow, command string) {
 	target := fmt.Sprintf("%s:%s.0", sessionName, currentWindow)
-	cmd := exec.Command("tmux", "send-keys", "-t "+target, command, "C-m")
+	cmd := exec.Command(
+		"tmux",
+		"send-keys",
+		fmt.Sprintf("-t %s", target),
+		command,
+		"C-m",
+	)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
@@ -95,7 +102,7 @@ func SetWindows(ash Ash) {
 	cmd := exec.Command(
 		"tmux",
 		"select-window",
-		"-t "+target,
+		fmt.Sprintf("-t %s", target),
 	)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -110,7 +117,7 @@ func Attach(ash Ash) {
 	cmd := exec.Command(
 		"tmux",
 		"attach-session",
-		"-t "+ash.SessionName,
+		fmt.Sprintf("-t %s", ash.SessionName),
 	)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -119,4 +126,45 @@ func Attach(ash Ash) {
 	if err != nil {
 		fmt.Printf("failed to attach session: %s\n", err)
 	}
+}
+
+func HasSession(sessionName string) bool {
+	cmd := exec.Command(
+		"tmux",
+		"has-session",
+		fmt.Sprintf("-t= %s", sessionName),
+	)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Stdin = os.Stdin
+	cmd.Run()
+	if cmd.ProcessState.ExitCode() != 0 {
+		return false
+	}
+	return true
+}
+
+func switchSession(sessionName string) {
+	cmd := exec.Command(
+		"tmux",
+		"switch-client",
+		fmt.Sprintf("-t %s", sessionName),
+	)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Stdin = os.Stdin
+	err := cmd.Run()
+	if err != nil {
+		fmt.Printf("failed to switch to session: %s\n", err)
+	}
+}
+
+func ChangeSession(ash Ash) {
+	tmuxEnv, tmuxEnvExist := os.LookupEnv("TMUX")
+	fmt.Printf("$TMUX=%s exist:%v\n", tmuxEnv, tmuxEnvExist)
+	if tmuxEnvExist {
+		switchSession(ash.SessionName)
+		return
+	}
+	Attach(ash)
 }

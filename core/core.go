@@ -286,6 +286,11 @@ func recreateFromAshes(phoemuxConfigPath, alias string) {
 
 	writeToCache(phoemuxConfigPath, alias)
 
+	if (tmux.HasSession(ash.SessionName)) {
+		tmux.ChangeSession(ash)
+		return
+	}
+
 	tmux.NewSession(ash)
 	for i, window := range ash.Windows {
 		if i == 0 {
