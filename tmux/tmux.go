@@ -137,8 +137,8 @@ func HasSession(sessionName string) bool {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
-	cmd.Run()
-	if cmd.ProcessState.ExitCode() != 0 {
+	err := cmd.Run()
+	if err != nil || cmd.ProcessState.ExitCode() != 0 {
 		return false
 	}
 	return true
