@@ -10,6 +10,9 @@ I just find anoying manually setting up local servers every day
 
 ## How to install?
 
+### From Releases Page
+binaries for linux (maybe it works in macos too) are [here](https://github.com/jhonnyV-V/phoemux/releases)
+
 ### With Go
 ```bash
 go install github.com/jhonnyV-V/phoemux@latest
