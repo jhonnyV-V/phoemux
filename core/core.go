@@ -307,7 +307,7 @@ func recreateFromAshes(phoemuxConfigPath, alias string) {
 	}
 
 	tmux.SetWindows(ash)
-	tmux.Attach(ash)
+	tmux.ChangeSession(ash)
 }
 
 func Delete(phoemuxConfigPath, alias string) {
