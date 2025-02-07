@@ -146,5 +146,9 @@ func (m model) View() string {
 	if m.choice != "" {
 		return ""
 	}
+	if m.quitting {
+		//TODO: maybe add a nice quitting message
+		return ""
+	}
 	return "\n" + m.list.View()
 }
