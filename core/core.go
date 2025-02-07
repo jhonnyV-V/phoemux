@@ -223,6 +223,9 @@ func ListAshes(phoemuxConfigPath string) {
 	}
 
 	switch Choice.Type {
+	/* TODO: move delete and edit to the list.go file, and DO NOT QUIT on delete or edit
+		consider using tea.ExecProcess to edit the file
+	*/
 	case "open":
 		recreateFromAshes(phoemuxConfigPath, Choice.Target)
 	case "delete":
