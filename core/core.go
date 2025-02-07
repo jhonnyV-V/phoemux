@@ -211,7 +211,9 @@ func ListAshes(phoemuxConfigPath string) {
 
 	m := model{list: l}
 
-	if _, err := tea.NewProgram(m).Run(); err != nil {
+	program := tea.NewProgram(m)
+
+	if _, err := program.Run(); err != nil {
 		fmt.Println("Error running program:", err)
 		os.Exit(1)
 	}
@@ -286,7 +288,7 @@ func recreateFromAshes(phoemuxConfigPath, alias string) {
 
 	writeToCache(phoemuxConfigPath, alias)
 
-	if (tmux.HasSession(ash.SessionName)) {
+	if tmux.HasSession(ash.SessionName) {
 		tmux.ChangeSession(ash)
 		return
 	}

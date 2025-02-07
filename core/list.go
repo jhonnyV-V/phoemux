@@ -14,7 +14,12 @@ import (
 const listHeight = 20
 
 var (
-	titleStyle        = lipgloss.NewStyle().MarginLeft(2)
+	titleStyle = lipgloss.
+			NewStyle().
+			Width(20).
+			Align(lipgloss.Center).
+			Bold(true).
+			Border(lipgloss.ThickBorder(), false, false, true)
 	itemStyle         = lipgloss.NewStyle().PaddingLeft(4)
 	selectedItemStyle = lipgloss.NewStyle().PaddingLeft(2).Foreground(lipgloss.Color("170"))
 	paginationStyle   = list.DefaultStyles().PaginationStyle.PaddingLeft(4)
@@ -72,7 +77,7 @@ func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list
 	fn := itemStyle.Render
 	if index == m.Index() {
 		fn = func(s ...string) string {
-			return selectedItemStyle.Render("> " + strings.Join(s, " "))
+			return selectedItemStyle.Render("->  " + strings.Join(s, " "))
 		}
 	}
 
