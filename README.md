@@ -58,7 +58,8 @@ open the "ash" with the $EDITOR env variable or nano as a default
 ```bash
 phoemux list
 ```
-list all the configs files (or ashes) created and if you select one it execute it
+list all the configs files (ashes) created
+this enables a few functionalities like deleting, editing and opening a config file
 ![usage](./list_demo.gif)
 
 ### last
