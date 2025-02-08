@@ -3,6 +3,7 @@ package core
 import (
 	"fmt"
 	"io"
+	"os/exec"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/key"
@@ -26,16 +27,13 @@ var (
 	paginationStyle   = list.DefaultStyles().PaginationStyle.PaddingLeft(4)
 	helpStyle         = list.DefaultStyles().HelpStyle.PaddingLeft(4).PaddingBottom(1)
 	quitTextStyle     = lipgloss.NewStyle().Margin(1, 0, 2, 4)
-	warningTextStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("220")).Bold(true)
-	boldTextStyle = lipgloss.NewStyle().Bold(true)
-	keywordStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("204")).Background(lipgloss.Color("235"))
-
-	Choice ChoiceType = ChoiceType{}
+	warningTextStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("220")).Bold(true)
+	boldTextStyle     = lipgloss.NewStyle().Bold(true)
+	keywordStyle      = lipgloss.NewStyle().Foreground(lipgloss.Color("204")).Background(lipgloss.Color("235"))
 )
 
-type ChoiceType struct {
-	Target string
-	Type   string
+type EditorError struct {
+	err error
 }
 
 type listKeyMap struct {
@@ -110,7 +108,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch keypress := msg.String(); keypress {
 		case "q", "ctrl+c":
 			m.quitting = true
-			Quit = true
 			return m, tea.Quit
 
 		case "enter":
@@ -120,8 +117,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			i, ok := m.list.SelectedItem().(item)
 			if ok {
 				m.choice = strings.TrimSpace(string(i))
-				Choice.Target = m.choice
-				Choice.Type = "open"
+				Choice = m.choice
 			}
 			return m, tea.Quit
 
@@ -131,11 +127,20 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			i, ok := m.list.SelectedItem().(item)
 			if ok {
-				m.choice = strings.TrimSpace(string(i))
-				Choice.Target = m.choice
-				Choice.Type = "edit"
+				filePath := fmt.Sprintf(
+					"%s/%s.yaml",
+					m.configPath,
+					strings.TrimSpace(string(i)),
+				)
+
+				editor := getEditor()
+				return m, tea.ExecProcess(
+					exec.Command(editor, filePath),
+					func(err error) tea.Msg {
+						return EditorError{err: err}
+					},
+				)
 			}
-			return m, tea.Quit
 
 		case "d":
 			if m.deleting {

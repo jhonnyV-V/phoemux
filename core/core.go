@@ -15,11 +15,8 @@ import (
 )
 
 var (
-	Quit bool
-)
-
-var (
 	OpenEditor = true
+	Choice = ""
 )
 
 func fileExist(path string) bool {
@@ -197,19 +194,11 @@ func ListAshes(phoemuxConfigPath string) {
 		os.Exit(1)
 	}
 
-	if Quit {
+	if Choice == "" {
 		os.Exit(0)
 	}
 
-	switch Choice.Type {
-	/* TODO: move and edit to the list.go file, and DO NOT QUIT edit
-		consider using tea.ExecProcess to edit the file
-	*/
-	case "open":
-		recreateFromAshes(phoemuxConfigPath, Choice.Target)
-	case "edit":
-		Edit(phoemuxConfigPath, Choice.Target)
-	}
+	recreateFromAshes(phoemuxConfigPath, Choice)
 }
 
 func writeToCache(phoemuxConfigPath, alias string) {
