@@ -85,9 +85,10 @@ func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list
 }
 
 type model struct {
-	list     list.Model
-	choice   string
-	quitting bool
+	list       list.Model
+	choice     string
+	quitting   bool
+	configPath string
 }
 
 func (m model) Init() tea.Cmd {
@@ -128,12 +129,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "d":
 			i, ok := m.list.SelectedItem().(item)
 			if ok {
-				m.choice = strings.TrimSpace(string(i))
-				Choice.Target = m.choice
-				Choice.Type = "delete"
+				idx := m.list.Index()
+				choice := strings.TrimSpace(string(i))
+				Delete(m.configPath, choice)
+				m.list.RemoveItem(idx)
 			}
-			return m, tea.Quit
-
 		}
 	}
 

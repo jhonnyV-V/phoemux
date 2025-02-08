@@ -209,11 +209,12 @@ func ListAshes(phoemuxConfigPath string) {
 		}
 	}
 
-	m := model{list: l}
+	m := model{
+		list: l,
+		configPath: phoemuxConfigPath,
+	}
 
-	program := tea.NewProgram(m)
-
-	if _, err := program.Run(); err != nil {
+	if _, err := tea.NewProgram(m).Run(); err != nil {
 		fmt.Println("Error running program:", err)
 		os.Exit(1)
 	}
@@ -223,13 +224,11 @@ func ListAshes(phoemuxConfigPath string) {
 	}
 
 	switch Choice.Type {
-	/* TODO: move delete and edit to the list.go file, and DO NOT QUIT on delete or edit
+	/* TODO: move and edit to the list.go file, and DO NOT QUIT edit
 		consider using tea.ExecProcess to edit the file
 	*/
 	case "open":
 		recreateFromAshes(phoemuxConfigPath, Choice.Target)
-	case "delete":
-		Delete(phoemuxConfigPath, Choice.Target)
 	case "edit":
 		Edit(phoemuxConfigPath, Choice.Target)
 	}
