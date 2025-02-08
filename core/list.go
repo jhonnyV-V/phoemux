@@ -12,11 +12,12 @@ import (
 )
 
 const listHeight = 20
+const defaultWidth = 20
 
 var (
 	titleStyle = lipgloss.
 			NewStyle().
-			Width(20).
+			Width(defaultWidth).
 			Align(lipgloss.Center).
 			Bold(true).
 			Border(lipgloss.ThickBorder(), false, false, true)
@@ -25,6 +26,9 @@ var (
 	paginationStyle   = list.DefaultStyles().PaginationStyle.PaddingLeft(4)
 	helpStyle         = list.DefaultStyles().HelpStyle.PaddingLeft(4).PaddingBottom(1)
 	quitTextStyle     = lipgloss.NewStyle().Margin(1, 0, 2, 4)
+	warningTextStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("220")).Bold(true)
+	boldTextStyle = lipgloss.NewStyle().Bold(true)
+	keywordStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("204")).Background(lipgloss.Color("235"))
 
 	Choice ChoiceType = ChoiceType{}
 )
@@ -88,6 +92,7 @@ type model struct {
 	list       list.Model
 	choice     string
 	quitting   bool
+	deleting   bool
 	configPath string
 }
 
@@ -109,6 +114,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 
 		case "enter":
+			if m.deleting {
+				break
+			}
 			i, ok := m.list.SelectedItem().(item)
 			if ok {
 				m.choice = strings.TrimSpace(string(i))
@@ -118,6 +126,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 
 		case "e":
+			if m.deleting {
+				break
+			}
 			i, ok := m.list.SelectedItem().(item)
 			if ok {
 				m.choice = strings.TrimSpace(string(i))
@@ -127,13 +138,34 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 
 		case "d":
+			if m.deleting {
+				break
+			}
 			i, ok := m.list.SelectedItem().(item)
 			if ok {
-				idx := m.list.Index()
-				choice := strings.TrimSpace(string(i))
-				Delete(m.configPath, choice)
-				m.list.RemoveItem(idx)
+				m.deleting = true
+				m.choice = strings.TrimSpace(string(i))
+				// idx := m.list.Index()
+				// Delete(m.configPath, choice)
+				// m.list.RemoveItem(idx)
 			}
+
+		case "y":
+			if !m.deleting {
+				break
+			}
+			m.deleting = false
+			idx := m.list.Index()
+			Delete(m.configPath, m.choice)
+			m.list.RemoveItem(idx)
+			m.choice = ""
+
+		case "n":
+			if !m.deleting {
+				break
+			}
+			m.deleting = false
+			m.choice = ""
 		}
 	}
 
@@ -143,12 +175,46 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
-	if m.choice != "" {
-		return ""
-	}
 	if m.quitting {
 		//TODO: maybe add a nice quitting message
 		return ""
 	}
+	if m.deleting {
+		return fmt.Sprintf(
+			"\n\n  %s %s %s %s %s\n",
+			boldTextStyle.Render("Do you wish to"),
+			warningTextStyle.Render("delete"),
+			boldTextStyle.Render("the item"),
+			keywordStyle.Render(m.choice),
+			boldTextStyle.Render("? y/n"),
+		)
+	}
+	if m.choice != "" {
+		return ""
+	}
 	return "\n" + m.list.View()
+}
+
+func newList(items []list.Item, configPath string) model {
+	listKeys := newListKeyMap()
+
+	l := list.New(items, itemDelegate{}, defaultWidth, listHeight)
+	l.Title = "Ashes"
+	l.SetShowStatusBar(false)
+	l.SetFilteringEnabled(false)
+	l.Styles.Title = titleStyle
+	l.Styles.PaginationStyle = paginationStyle
+	l.Styles.HelpStyle = helpStyle
+	l.AdditionalFullHelpKeys = func() []key.Binding {
+		return []key.Binding{
+			listKeys.openSelection,
+			listKeys.editSelection,
+			listKeys.deleteSelection,
+		}
+	}
+
+	return model{
+		list:       l,
+		configPath: configPath,
+	}
 }

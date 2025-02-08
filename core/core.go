@@ -9,7 +9,6 @@ import (
 
 	"github.com/jhonnyV-V/phoemux/tmux"
 
-	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/goccy/go-yaml"
@@ -191,28 +190,7 @@ func ListAshes(phoemuxConfigPath string) {
 
 	var items []list.Item = getListOfItems(ashes)
 
-	const defaultWidth = 20
-	listKeys := newListKeyMap()
-
-	l := list.New(items, itemDelegate{}, defaultWidth, listHeight)
-	l.Title = "Ashes"
-	l.SetShowStatusBar(false)
-	l.SetFilteringEnabled(false)
-	l.Styles.Title = titleStyle
-	l.Styles.PaginationStyle = paginationStyle
-	l.Styles.HelpStyle = helpStyle
-	l.AdditionalFullHelpKeys = func() []key.Binding {
-		return []key.Binding{
-			listKeys.openSelection,
-			listKeys.editSelection,
-			listKeys.deleteSelection,
-		}
-	}
-
-	m := model{
-		list: l,
-		configPath: phoemuxConfigPath,
-	}
+	m := newList(items, phoemuxConfigPath)
 
 	if _, err := tea.NewProgram(m).Run(); err != nil {
 		fmt.Println("Error running program:", err)
