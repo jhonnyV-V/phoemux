@@ -145,9 +145,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if ok {
 				m.deleting = true
 				m.choice = strings.TrimSpace(string(i))
-				// idx := m.list.Index()
-				// Delete(m.configPath, choice)
-				// m.list.RemoveItem(idx)
 			}
 
 		case "y":
