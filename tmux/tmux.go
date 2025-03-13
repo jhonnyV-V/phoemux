@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"slices"
+	"strings"
 )
 
 type Terminal struct {
@@ -129,11 +131,20 @@ func switchSession(sessionName string) {
 }
 
 func Attach(ash Ash) {
-	cmd := exec.Command(
-		"tmux",
-		"attach-session",
-		fmt.Sprintf("-t %s", ash.SessionName),
-	)
+	var cmd *exec.Cmd
+	if ash.SessionName != "" {
+		cmd = exec.Command(
+			"tmux",
+			"attach-session",
+			fmt.Sprintf("-t %s", ash.SessionName),
+		)
+	} else {
+		cmd = exec.Command(
+			"tmux",
+			"attach-session",
+		)
+	}
+
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
@@ -159,11 +170,109 @@ func HasSession(sessionName string) bool {
 	return true
 }
 
-func ChangeSession(ash Ash) {
+func IsInsideTmux() bool {
 	_, tmuxEnvExist := os.LookupEnv("TMUX")
+	return tmuxEnvExist
+}
+
+func ChangeSession(ash Ash) {
+	tmuxEnvExist := IsInsideTmux()
 	if tmuxEnvExist {
 		switchSession(ash.SessionName)
 		return
 	}
 	Attach(ash)
+}
+
+func GetCurrentSessionName() string {
+	cmd := exec.Command(
+		"tmux",
+		"list-sessions",
+		"-F",
+		"#{session_name}",
+		"-f",
+		"#{session_attached}",
+	)
+
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Stdin = os.Stdin
+	out, err := cmd.Output()
+	if err != nil {
+		return ""
+	}
+	return string(out)
+}
+
+func GetListOfSessions() []string {
+	sessions := []string{}
+	cmd := exec.Command(
+		"tmux",
+		"list-sessions",
+		"-F",
+		"#{session_name}",
+	)
+
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Stdin = os.Stdin
+	out, err := cmd.Output()
+	if err != nil {
+		return sessions
+	}
+	sessions = strings.Split(string(out), "\n")
+	return sessions
+}
+
+func filter[T any](slice []T, f func(T) bool) []T {
+	for i, value := range slice {
+		if !f(value) {
+			result := slices.Clone(slice[:i])
+			for i++; i < len(slice); i++ {
+				value = slice[i]
+				if f(value) {
+					result = append(result, value)
+				}
+			}
+			return slices.Clip(result)
+		}
+	}
+	return slice
+}
+
+func GetOtherSession() (string){
+	sessions := GetListOfSessions()
+	currentSession := GetCurrentSessionName()
+	sessions = filter(sessions, func(s string) bool {
+		return s != currentSession
+	})
+	if len(sessions) == 0 {
+		return ""
+	}
+	return sessions[0]
+}
+
+func Kill(sessionName string) {
+	var cmd *exec.Cmd
+
+	if sessionName != "" {
+		cmd = exec.Command(
+			"tmux",
+			"kill-session",
+			fmt.Sprintf("-t %s", sessionName),
+		)
+	} else {
+		cmd = exec.Command(
+			"tmux",
+			"kill-session",
+		)
+	}
+
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Stdin = os.Stdin
+	err := cmd.Run()
+	if err != nil {
+		fmt.Printf("failed to kill session: %s\n", err)
+	}
 }
