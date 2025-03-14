@@ -41,27 +41,31 @@ var killCmd = &cobra.Command{
 	Long: `kill command
 Kills current tmux session using tmux kill-session:
 phoemux kill`,
+	Example: "phoemux run kill -t react-app -a server-app",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("flags -t %s -a %s -b %t\n", target, attach, dumb_attach)
 		tmuxEnvExist := tmux.IsInsideTmux()
 		if !tmuxEnvExist && target == "" {
 			fmt.Printf("You are not in a tmux session\n")
 			return
 		}
+
+		if target == "" {
+			target = tmux.GetCurrentSessionName()
+		}
+
 		if dumb_attach {
-			if target == "" {
-				target = tmux.GetCurrentSessionName()
-			}
 			ash := tmux.Ash{}
 			if tmuxEnvExist {
 				ash.SessionName = tmux.GetOtherSession()
+				if ash.SessionName == "" {
+					fmt.Printf("can't find other tmux session\n")
+					return
+				}
 			}
 			tmux.ChangeSession(ash)
 		}
+
 		if attach != "" {
-			if target == "" {
-				target = tmux.GetCurrentSessionName()
-			}
 			tmux.ChangeSession(tmux.Ash{
 				SessionName: attach,
 			})

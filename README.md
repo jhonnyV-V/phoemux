@@ -69,6 +69,15 @@ phoemux last
 if possible open the last as used
 ![example](./last_demo.gif)
 
+### kill
+```bash
+phoemux kill [-t,-target target-session-name] [-d,-dump-attach] [-a,-attach session-name]
+```
+kill current or target tmux session session
+-d option will attach to another tmux session before killing the current or target
+-a option will attach to a specified tmux session before killing the current or target
+
+
 ### execute
 ```bash
 phoemux <alias>
