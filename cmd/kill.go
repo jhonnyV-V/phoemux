@@ -70,9 +70,9 @@ phoemux kill`,
 				SessionName: attach,
 			})
 		}
+
 		tmux.Kill(target)
 	},
-	//TODO: add runtime completion
 }
 
 func init() {
@@ -80,5 +80,11 @@ func init() {
 	killCmd.Flags().StringVarP(&attach, "attach", "a", "", "attach to session name")
 	killCmd.Flags().BoolVarP(&dumb_attach, "dumb-attach", "d", false, "run attach without arguments")
 	killCmd.MarkFlagsMutuallyExclusive("attach", "dumb-attach")
+	killCmd.RegisterFlagCompletionFunc("target", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return tmux.GetListOfSessions(), cobra.ShellCompDirectiveNoFileComp
+	})
+	killCmd.RegisterFlagCompletionFunc("attach", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return tmux.GetOthersSessions(), cobra.ShellCompDirectiveNoFileComp
+	})
 	rootCmd.AddCommand(killCmd)
 }
