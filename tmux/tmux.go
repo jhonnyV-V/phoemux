@@ -187,16 +187,11 @@ func ChangeSession(ash Ash) {
 func GetCurrentSessionName() string {
 	cmd := exec.Command(
 		"tmux",
-		"list-sessions",
-		"-F",
-		"#{session_name}",
-		"-f",
-		"#{session_attached}",
+		"display-message",
+		"-p",
+		"#S",
 	)
 
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	cmd.Stdin = os.Stdin
 	out, err := cmd.Output()
 	if err != nil {
 		return ""
@@ -213,15 +208,14 @@ func GetListOfSessions() []string {
 		"#{session_name}",
 	)
 
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	cmd.Stdin = os.Stdin
 	out, err := cmd.Output()
 	if err != nil {
 		return sessions
 	}
 	sessions = strings.Split(string(out), "\n")
-	return sessions
+	return filter(sessions, func(s string) bool {
+		return s != ""
+	})
 }
 
 func filter[T any](slice []T, f func(T) bool) []T {
@@ -240,11 +234,21 @@ func filter[T any](slice []T, f func(T) bool) []T {
 	return slice
 }
 
-func GetOtherSession() (string){
+func GetOthersSessions() []string {
 	sessions := GetListOfSessions()
 	currentSession := GetCurrentSessionName()
 	sessions = filter(sessions, func(s string) bool {
-		return s != currentSession
+		return strings.TrimSpace(s) != strings.TrimSpace(currentSession)
+	})
+
+	return sessions
+}
+
+func GetOtherSession() string {
+	sessions := GetListOfSessions()
+	currentSession := GetCurrentSessionName()
+	sessions = filter(sessions, func(s string) bool {
+		return strings.TrimSpace(s) != strings.TrimSpace(currentSession)
 	})
 	if len(sessions) == 0 {
 		return ""
