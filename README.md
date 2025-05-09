@@ -71,7 +71,7 @@ if possible open the last as used
 
 ### kill
 ```bash
-phoemux kill [-t,-target target-session-name] [-d,-dump-attach] [-a,-attach session-name]
+phoemux kill [-t,-target target-session-name] [-d,-dumb-attach] [-a,-attach session-name]
 ```
 kill current or target tmux session session
 -d option will attach to another tmux session before killing the current or target
@@ -87,3 +87,4 @@ set up tmux session following the config file or ash related to that alias
 ## Changelog
 
 - now if a session for an "ash" already exist phoemux will attach or switch to that session
+- now the phoemux command and the edit and delete subcommands have runtime completion
