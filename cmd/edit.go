@@ -40,6 +40,17 @@ phoemux edit <project_name>`,
 		phoemuxConfigPath := core.GetConfigPath()
 		core.Edit(phoemuxConfigPath, args[0])
 	},
+	ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		phoemuxConfigPath := core.GetConfigPath()
+
+		ashes, err := core.GetSimpleList(phoemuxConfigPath)
+
+		if err != nil {
+			return nil, cobra.ShellCompDirectiveError
+		}
+
+		return ashes, cobra.ShellCompDirectiveNoFileComp
+	},
 }
 
 func init() {

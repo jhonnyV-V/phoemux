@@ -72,6 +72,7 @@ phoemux kill`,
 		}
 		tmux.Kill(target)
 	},
+	//TODO: add runtime completion
 }
 
 func init() {

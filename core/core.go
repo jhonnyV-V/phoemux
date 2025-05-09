@@ -16,7 +16,7 @@ import (
 
 var (
 	OpenEditor = true
-	Choice = ""
+	Choice     = ""
 )
 
 func fileExist(path string) bool {
@@ -164,6 +164,25 @@ func Edit(phoemuxConfigPath, alias string) {
 	if err != nil {
 		fmt.Printf("Error while editing the file: %s\n", err)
 	}
+}
+
+func GetSimpleList(phoemuxConfigPath string) ([]string, error) {
+	ashes := []string{}
+
+	files, err := os.ReadDir(phoemuxConfigPath)
+	if err != nil {
+		return ashes, fmt.Errorf("Get Simple List failed to read directory: %w", err)
+	}
+
+	for _, ash := range files {
+		if !strings.Contains(ash.Name(), ".yaml") {
+			continue
+		}
+		name, _, _ := strings.Cut(ash.Name(), ".yaml")
+		ashes = append(ashes, name)
+	}
+
+	return ashes, nil
 }
 
 func getListOfItems(ashes []fs.DirEntry) []list.Item {
