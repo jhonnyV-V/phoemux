@@ -49,6 +49,11 @@ phoemux kill`,
 			return
 		}
 
+		if !dumb_attach && attach == "" {
+			tmux.Kill(target)
+			return
+		}
+
 		if target == "" {
 			target = tmux.GetCurrentSessionName()
 		}
@@ -63,15 +68,17 @@ phoemux kill`,
 				}
 			}
 			tmux.ChangeSession(ash)
+			tmux.Kill(target)
+			return
 		}
 
 		if attach != "" {
 			tmux.ChangeSession(tmux.Ash{
 				SessionName: attach,
 			})
+			tmux.Kill(target)
+			return
 		}
-
-		tmux.Kill(target)
 	},
 }
 

@@ -30,8 +30,8 @@ func NewSession(ash Ash) {
 	cmd := exec.Command(
 		"tmux",
 		"new-session",
+		"-s", ash.SessionName,
 		"-d",
-		fmt.Sprintf("-s %s", ash.SessionName),
 		"-c",
 		ash.Path,
 	)
@@ -50,7 +50,7 @@ func RenameWindow(ash Ash, oldName, newName string) {
 	cmd := exec.Command(
 		"tmux",
 		"rename-window",
-		fmt.Sprintf("-t %s", target),
+		fmt.Sprintf("-t=%s", target),
 		newName,
 	)
 	cmd.Stdout = os.Stdout
@@ -70,7 +70,7 @@ func NewWindow(ash Ash, window Window) {
 		ash.Path,
 		"-n",
 		window.Name,
-		fmt.Sprintf("-t %s", ash.SessionName),
+		fmt.Sprintf("-t=%s", ash.SessionName),
 	)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -86,7 +86,7 @@ func RunCommand(sessionName, currentWindow, command string) {
 	cmd := exec.Command(
 		"tmux",
 		"send-keys",
-		fmt.Sprintf("-t %s", target),
+		fmt.Sprintf("-t=%s", target),
 		command,
 		"C-m",
 	)
@@ -104,7 +104,7 @@ func SetWindows(ash Ash) {
 	cmd := exec.Command(
 		"tmux",
 		"select-window",
-		fmt.Sprintf("-t %s", target),
+		fmt.Sprintf("-t=%s", target),
 	)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -119,7 +119,7 @@ func switchSession(sessionName string) {
 	cmd := exec.Command(
 		"tmux",
 		"switch-client",
-		fmt.Sprintf("-t %s", sessionName),
+		fmt.Sprintf("-t=%s", sessionName),
 	)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -136,7 +136,7 @@ func Attach(ash Ash) {
 		cmd = exec.Command(
 			"tmux",
 			"attach-session",
-			fmt.Sprintf("-t %s", ash.SessionName),
+			fmt.Sprintf("-t=%s", ash.SessionName),
 		)
 	} else {
 		cmd = exec.Command(
@@ -158,7 +158,7 @@ func HasSession(sessionName string) bool {
 	cmd := exec.Command(
 		"tmux",
 		"has-session",
-		fmt.Sprintf("-t= %s", sessionName),
+		fmt.Sprintf("-t=%s", sessionName),
 	)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -196,7 +196,7 @@ func GetCurrentSessionName() string {
 	if err != nil {
 		return ""
 	}
-	return string(out)
+	return strings.ReplaceAll(string(out), "\n", "")
 }
 
 func GetListOfSessions() []string {
@@ -263,7 +263,7 @@ func Kill(sessionName string) {
 		cmd = exec.Command(
 			"tmux",
 			"kill-session",
-			fmt.Sprintf("-t %s", sessionName),
+			"-t", sessionName,
 		)
 	} else {
 		cmd = exec.Command(
