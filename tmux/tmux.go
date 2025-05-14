@@ -256,6 +256,37 @@ func GetOtherSession() string {
 	return sessions[0]
 }
 
+func GetListOfWindows(sessionName string) ([]string, string) {
+	windows := []string{}
+	active := ""
+	cmd := exec.Command(
+		"tmux",
+		"list-windows",
+		"-t", sessionName,
+		"-F",
+		"#{window_name}active=#{window_active}",
+	)
+
+	out, err := cmd.Output()
+	if err != nil {
+		return windows, active
+	}
+	windows = strings.Split(string(out), "\n")
+
+	windows = filter(windows, func(s string) bool {
+		return s != ""
+	})
+
+	for i, v := range windows {
+		result := strings.Split(v, "active=")
+		if result[1] == "1" {
+			active = result[0]
+		}
+		windows[i] = result[0]
+	}
+	return windows, active
+}
+
 func Kill(sessionName string) {
 	var cmd *exec.Cmd
 
