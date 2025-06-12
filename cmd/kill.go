@@ -50,6 +50,9 @@ phoemux kill`,
 		}
 
 		if !dumb_attach && attach == "" {
+			if (target == "") {
+				target = tmux.GetCurrentSessionName()
+			}
 			tmux.Kill(target)
 			return
 		}

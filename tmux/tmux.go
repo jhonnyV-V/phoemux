@@ -287,21 +287,111 @@ func GetListOfWindows(sessionName string) ([]string, string) {
 	return windows, active
 }
 
-func Kill(sessionName string) {
-	var cmd *exec.Cmd
+func GetListOfPanes(sessionName string) []string {
+	cmd := exec.Command(
+		"tmux",
+		"list-panes",
+		"-a",
+		"-F",
+		"#{pane_id} #{pane_current_command} #{session_name}",
+	)
 
-	if sessionName != "" {
-		cmd = exec.Command(
-			"tmux",
-			"kill-session",
-			"-t", sessionName,
-		)
-	} else {
-		cmd = exec.Command(
-			"tmux",
-			"kill-session",
-		)
+	out, err := cmd.Output()
+
+	if err != nil {
+		fmt.Printf("Failed to get list of panes: %s\n", err)
+		return []string{}
 	}
+
+	panes := strings.Split(string(out), "\n")
+
+	panes = filter(panes, func(s string) bool {
+		if s == "" {
+			return false
+		}
+
+		return strings.Contains(s, sessionName)
+	})
+
+	return panes
+}
+
+func SendCommandToPane(paneId string, commands []string) {
+	args := []string{"send-keys", "-t", paneId}
+
+	for _, command := range commands {
+		args = append(args, command)
+	}
+	cmd := exec.Command(
+		"tmux",
+		args...,
+	)
+
+	err := cmd.Run()
+	if err != nil {
+		fmt.Printf("failed to send command to pane: %s\n", err)
+	}
+}
+
+func killAllProceessInSession(sessionName string) {
+	panes := GetListOfPanes(sessionName)
+	slices.Reverse(panes)
+
+	for _, pane := range panes {
+		paneData := strings.Split(pane, " ")
+		paneId := paneData[0]
+		paneProc := strings.ToLower(paneData[1])
+		cmd := []string{}
+		if paneProc == "vim" || paneProc == "vi" || paneProc == "nvim" {
+			cmd = append(cmd, "Escape")
+			cmd = append(cmd, ":qa")
+			cmd = append(cmd, "Enter")
+		} else if paneProc == "emacs" {
+			cmd = append(cmd, "C-x")
+			cmd = append(cmd, "C-c")
+		} else if paneProc == "man" || paneProc == "less" {
+			cmd = append(cmd, "q")
+		} else if paneProc == "bash" || paneProc == "zsh" || paneProc == "fish" {
+			cmd = append(cmd, "C-c")
+			cmd = append(cmd, "C-u")
+			cmd = append(cmd, "space")
+			cmd = append(cmd, "\"exit\"")
+			cmd = append(cmd, "Enter")
+		} else if paneProc == "ssh" || paneProc == "vagrant" {
+			cmd = append(cmd, "Enter")
+			cmd = append(cmd, "\"~.\"")
+		} else if paneProc == "psql" || paneProc == "mysql" {
+			cmd = append(cmd, "C-d")
+		} else if paneProc == "go" && paneData[2] == "phoemux" {
+			cmd = append(cmd, "")
+		} else if paneProc == "phoemux" {
+			cmd = append(cmd, "")
+		}
+
+		if len(cmd) == 0 {
+			cmd = append(cmd, "C-c")
+			cmd = append(cmd, "C-c")
+			cmd = append(cmd, "C-c")
+			cmd = append(cmd, "C-c")
+			cmd = append(cmd, "C-c")
+			cmd = append(cmd, "C-c")
+			cmd = append(cmd, "C-c")
+			cmd = append(cmd, "C-c")
+		}
+
+		SendCommandToPane(paneId, cmd)
+	}
+}
+
+func Kill(sessionName string) {
+
+	cmd := exec.Command(
+		"tmux",
+		"kill-session",
+		"-t", sessionName,
+	)
+
+	killAllProceessInSession(sessionName)
 
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
