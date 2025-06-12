@@ -71,3 +71,7 @@ func Execute() {
 
 func init() {
 }
+
+func SetVersion(version string) {
+	rootCmd.Version = version
+}

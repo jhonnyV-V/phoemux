@@ -8,6 +8,6 @@ if [[ $# -eq 0 ]]; then
 fi
 
 rm ./dist/*
-./build.sh
+./build.sh $1
 
 gh release create $1 ./dist/* --generate-notes
